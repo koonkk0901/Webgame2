@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>觀鳥小偵探 技能解鎖過三關</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans HK', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #333; /* 螢幕外框底色 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* 強制 4:3 比例的遊戲容器 */
+        #game-wrapper {
+            aspect-ratio: 4 / 3;
+            width: 100%;
+            max-width: calc(100vh * (4 / 3));
+            max-height: 100vh;
+            background-color: #d4edda; /* 預設粉綠色 */
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            overflow: hidden;
+            transition: background-color 0.3s;
+        }
+
+        /* 標題區域 */
+        .header-area {
+            height: 20%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 1%;
+        }
+
+        /* 遊戲主體區域 */
+        .main-game-area {
+            height: 72%;
+            display: flex;
+            padding: 0 2%;
+            gap: 2%;
+        }
+
+        /* 底部訊息區域 */
+        .footer-area {
+            height: 8%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(1rem, 2.5vmin, 2rem);
+        }
+
+        /* 左方 3x3 圖片網格 */
+        .grid-left {
+            flex: 6;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 2%;
+            height: 100%;
+        }
+
+        /* 右方 9 格名字 */
+        .list-right {
+            flex: 4;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+            gap: 2%;
+        }
+
+        /* 圖片與按鈕共用樣式 */
+        .game-item {
+            border: 4px solid white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .game-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+
+        /* 圖片格特別設定 */
+        .img-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none;
+        }
+
+        /* 名字格特別設定 */
+        .name-box {
+            flex: 1;
+            font-size: clamp(1rem, 2.5vmin, 1.8rem);
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* 狀態樣式 */
+        .selected {
+            border-color: #3b82f6 !important; /* 藍色選取框 */
+            transform: scale(1.05) !important;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.6) !important;
+        }
+
+        .matched {
+            border-color: #22c55e !important; /* 綠色成功框 */
+            opacity: 0.5;
+            pointer-events: none;
+            filter: grayscale(50%);
+        }
+
+        /* 解鎖成功頁面 */
+        #success-page {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f8d7da; /* 粉紅色底色 */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .btn-next {
+            margin-top: 5vh;
+            padding: 2vh 4vw;
+            font-size: clamp(1.5rem, 4vmin, 3rem);
+            background-color: #ff6b81;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(255, 107, 129, 0.4);
+            transition: all 0.2s;
+        }
+
+        .btn-next:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(255, 107, 129, 0.6);
+        }
+        .btn-next:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-wrapper">
+        <!-- 第一頁面：遊戲畫面 -->
+        <div id="game-page" style="height: 100%; width: 100%;">
+            <!-- 標題 -->
+            <div class="header-area">
+                <div style="font-size: clamp(1rem, 2.5vmin, 1.5rem); font-weight: bold; color: #2c3e50;">2025-2026 科學科 香港真光中學附屬小學暨幼稚園</div>
+                <div style="font-size: clamp(1.2rem, 3.5vmin, 2.2rem); font-weight: bold; color: #1a252f; margin: 0.5vh 0;">🕵️‍♂️ 觀鳥小偵探 技能解鎖過三關 🕵️‍♀️</div>
+                <div style="font-size: clamp(1rem, 3vmin, 1.8rem); font-weight: bold; color: #e67e22;">👀 視覺技能解鎖 🔓</div>
+            </div>
+
+            <!-- 遊戲主體 -->
+            <div class="main-game-area">
+                <!-- 左方圖片網格 -->
+                <div class="grid-left" id="image-grid"></div>
+                <!-- 右方名字列表 -->
+                <div class="list-right" id="name-list"></div>
+            </div>
+
+            <!-- 底部訊息 -->
+            <div class="footer-area">
+                <span id="error-message" style="color: red; font-weight: bold; opacity: 0; transition: opacity 0.3s;">觀鳥小偵探: 請再配對多一次</span>
+            </div>
+        </div>
+
+        <!-- 第二頁面：解鎖成功畫面 -->
+        <div id="success-page">
+            <div style="font-size: clamp(2rem, 6vmin, 4rem); font-weight: bold; color: #d63031; text-align: center; margin-bottom: 2vh;">
+                觀鳥小偵探:<br>視覺技能解鎖成功 🎉✨🙌
+            </div>
+            <button class="btn-next" onclick="nextDetective()">下一位觀鳥小偵探</button>
+        </div>
+    </div>
+
+    <!-- 拍手音效 -->
+    <audio id="clap-sound" src="https://raw.githubusercontent.com/koonkk0901/Game/main/%E6%8B%8D%E6%89%8B.mp3"></audio>
+
+    <script>
+        // 鳥類資料庫 (將 GitHub 的 blob 轉為 raw 以便直接讀取圖片)
+        const birdsData = [
+            { id: 1, name: '珠頸斑鳩', img: 'https://raw.githubusercontent.com/koonkk0901/Game/main/%E7%8F%A0%E9%A0%B8%E6%96%91%E9%B3%A9.jpg' },
+            { id: 2, name: '紅耳鵯', img: 'https://raw.githubusercontent.com/koonkk0901/Game/main/%E7%B4%85%E8%80%B3%E9%B5%AF.jpg' },
+            { id: 3, name: '小葵花鳳頭鸚鵡', img: 'https://raw.githubusercontent.com/koonkk0901/Game/main/%E5%B0%8F%E8%91%B5%E8%8A%B1%E9%B3%B3%E9%A0%AD%E9%B8%9A%E9%B5%A1.jpg' },
+            { id: 4, name: '噪鵑', img: 'https://raw.githubusercontent.com/koonkk0901/Game/main/%E5%99%AA%E9%B5%91.jpg' },
+            { id: 5, name: '麻雀', img: 'https://raw.githubusercontent.com/koonkk0901/Game/main/%E9%BA%BB%E9%9B%80.jpg' },
+            { id: 6, name: '黑耳鳶 (麻鷹)', img: 'https://raw.githubusercontent.com/koonkk0901/Game/main/%E9%BB%91%E8%80%B3%E9%B3%B6.jpg' },
+            { id: 7, name: '紅嘴藍鵲', img: 'https://raw.githubusercontent.com/koonkk0901/Game/main/%E7%B4%85%E5%98%B4%E8%97%8D%E9%B5%B2.jpg' },
+            { id: 8, name: '黑臉琵鷺', img: 'https://raw.githubusercontent.com/koonkk0901/Game/main/%E9%BB%91%E8%87%89%E7%90%B5%E9%B7%BA.jpg' },
+            { id: 9, name: '小白鷺', img: 'https://raw.githubusercontent.com/koonkk0901/Game/main/%E5%B0%8F%E7%99%BD%E9%B7%BA.jpg' } // 推測的小白鷺連結
+        ];
+
+        let selectedImageId = null;
+        let selectedNameId = null;
+        let matchedPairs = 0;
+
+        const clapSound = document.getElementById('clap-sound');
+
+        // 打亂陣列順序的函數
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // 初始化/重置遊戲
+        function initGame() {
+            matchedPairs = 0;
+            selectedImageId = null;
+            selectedNameId = null;
+            document.getElementById('error-message').style.opacity = '0';
+
+            const imageGrid = document.getElementById('image-grid');
+            const nameList = document.getElementById('name-list');
+            
+            imageGrid.innerHTML = '';
+            nameList.innerHTML = '';
+
+            // 準備打亂的圖片和名字
+            const shuffledImages = shuffleArray([...birdsData]);
+            const shuffledNames = shuffleArray([...birdsData]);
+
+            // 渲染左方圖片格
+            shuffledImages.forEach(bird => {
+                const box = document.createElement('div');
+                box.className = 'game-item img-box';
+                box.dataset.id = bird.id;
+                box.onclick = () => selectItem('image', bird.id, box);
+                
+                const img = document.createElement('img');
+                img.src = bird.img;
+                img.alt = "Bird Image";
+                // 如果圖片載入失敗，顯示備用文字
+                img.onerror = () => { img.style.display = 'none'; box.innerHTML = '<span style="color:#999">圖片載入中...</span>'; };
+                
+                box.appendChild(img);
+                imageGrid.appendChild(box);
+            });
+
+            // 渲染右方名字格
+            shuffledNames.forEach(bird => {
+                const box = document.createElement('div');
+                box.className = 'game-item name-box';
+                box.dataset.id = bird.id;
+                box.innerText = bird.name;
+                box.onclick = () => selectItem('name', bird.id, box);
+                nameList.appendChild(box);
+            });
+        }
+
+        // 處理點擊選取
+        function selectItem(type, id, element) {
+            // 如果已經配對過，不作反應
+            if (element.classList.contains('matched')) return;
+
+            // 清除之前的錯誤訊息
+            document.getElementById('error-message').style.opacity = '0';
+
+            if (type === 'image') {
+                // 移除其他圖片的選取狀態
+                document.querySelectorAll('.img-box').forEach(el => el.classList.remove('selected'));
+                selectedImageId = id;
+            } else {
+                // 移除其他名字的選取狀態
+                document.querySelectorAll('.name-box').forEach(el => el.classList.remove('selected'));
+                selectedNameId = id;
+            }
+
+            element.classList.add('selected');
+
+            // 檢查是否兩邊都已選取
+            if (selectedImageId !== null && selectedNameId !== null) {
+                checkMatch();
+            }
+        }
+
+        // 檢查配對是否正確
+        function checkMatch() {
+            const imgBoxes = document.querySelectorAll('.img-box');
+            const nameBoxes = document.querySelectorAll('.name-box');
+
+            if (selectedImageId === selectedNameId) {
+                // 配對正確
+                const currentMatchedId = selectedImageId;
+                
+                imgBoxes.forEach(box => {
+                    if (box.dataset.id == currentMatchedId) {
+                        box.classList.remove('selected');
+                        box.classList.add('matched');
+                    }
+                });
+                
+                nameBoxes.forEach(box => {
+                    if (box.dataset.id == currentMatchedId) {
+                        box.classList.remove('selected');
+                        box.classList.add('matched');
+                    }
+                });
+
+                matchedPairs++;
+                selectedImageId = null;
+                selectedNameId = null;
+
+                // 稍微延遲後顯示成功畫面
+                setTimeout(() => {
+                    showSuccessScreen();
+                }, 400);
+
+            } else {
+                // 配對錯誤
+                document.getElementById('error-message').style.opacity = '1';
+                
+                // 延遲取消選取狀態，讓學生看到錯了
+                setTimeout(() => {
+                    imgBoxes.forEach(box => box.classList.remove('selected'));
+                    nameBoxes.forEach(box => box.classList.remove('selected'));
+                    selectedImageId = null;
+                    selectedNameId = null;
+                }, 800);
+            }
+        }
+
+        // 顯示解鎖成功畫面
+        function showSuccessScreen() {
+            document.getElementById('success-page').style.display = 'flex';
+            document.getElementById('game-page').style.display = 'none';
+            // 播放拍手聲
+            clapSound.currentTime = 0;
+            clapSound.play().catch(e => console.log("音效播放被瀏覽器阻擋", e));
+        }
+
+        // 下一位小偵探按鈕邏輯
+        function nextDetective() {
+            // 停止拍手聲
+            clapSound.pause();
+            clapSound.currentTime = 0;
+
+            document.getElementById('success-page').style.display = 'none';
+            document.getElementById('game-page').style.display = 'block';
+
+            // 每次正確配對 1 種鳥類後，按下下一位就直接重新洗牌開新局
+            initGame();
+        }
+
+        // 遊戲啟動
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>
